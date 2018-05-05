@@ -156,6 +156,6 @@ public class Bikes {
         INDArray testPredicted = model.output(ds.getFeatures());
         PlotUtil.plotTestData(ds.getFeatures(), ds.getLabels(), testPredicted, allXYPoints, predictionsAtXYPoints, nPointsPerAxis);
 
-        System.out.println("****************Example finished********************");
+        System.out.println("Complete");
     }
 }
