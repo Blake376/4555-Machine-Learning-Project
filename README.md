@@ -1,91 +1,24 @@
-Deeplearning4J Examples
-=========================
-
-## NOTE: HOW to interpret these examples
-
-## Data Loading
-In this repository, you may likely see custom [datasetiterators](https://github.com/deeplearning4j/nd4j/blob/master/nd4j-backends/nd4j-api-parent/nd4j-api/src/main/java/org/nd4j/linalg/dataset/api/iterator/DataSetIterator.java) - these iterators are only for special examples and 1 off use cases. Consult the [gitter](https://gitter.im/deeplearning4j/deeplearning4j) if you are not sure how to proceed.
-Once you find a record reader for your use case, you then should use one of pre made iterators that knows how to interpret record reader output, either [RecordReaderDataSetIterator](https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/RecordReaderDataSetIterator.html) for normal data or [SequenceRecordReaderDataSetIterator](https://deeplearning4j.org/doc/org/deeplearning4j/datasets/datavec/SequenceRecordReaderDataSetIterator.html) for sequence data. For more on sequences, please see our [rnns page](http://deeplearning4j.org/usingrnns)
+This repository was originally forked from the DL4J example set (https://github.com/deeplearning4j/dl4j-examples).
 
 
-We have special iterators for 1 off use cases where normal data does not quite exist, or sometimes it is legacy.
-99% of the time you should be using [datavec](https://deeplearning4j.org/datavec) and writing your own custom [record readers](https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/RecordReader.html) if one of our pre provided ones is not suitable. If you are not sure what is available, please again consult the [gitter](https://gitter.im/deeplearning4j/deeplearning4j) - In general, you can find both [normal record readers](https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/RecordReader.html) and [sequence record readers](https://deeplearning4j.org/datavecdoc/org/datavec/api/records/reader/SequenceRecordReader.html) in the datavec [javadoc](http://deeplearning4j.org/datavecdoc).
+To run, run one of the classes in /dl4j-examples/src/main/java/MachineLearning4555
 
+1.
+For our data, we used a large collection of wine reviews (https://www.kaggle.com/zynicide/wine-reviews/data). The original data set was comprised of several columns, including the wine’s country of production, variety, price, critic score, and an arbitrary numbering. Before using the data in our algorithm, we cut out all columns except for the score, price, and wine variety. The original scores ranged from 80 to 100. In different instances of the algorithm, we put these scores into different numbers of classes. The first instance uses two classes, 0 if the score was 90 or below, 1 if score was above 90. The second instance uses three classes, 0 if the score was below 88, 1 if the score was between 88 and 94 (including 88 and 94), 2 if the score  was above 94. The third instance uses four classes, 0 if the score was below 85, 1 if the score was between 85 and 89 (including 85 and 89), 2 if the score was between 90 and 94 (including 90 and 94), 3 if the score was above 94. We used these score classes as our label. The individual prices of entries were left alone, but we removed all entries with price above 350, in order to reduce outliers and because it makes more sense for real life application. The original data set included entries from a large variety of wines, including syrah, moscato, and port. We first went through and labeled a large portion of the data as either RED, WHITE, ROSE, DESSERT, or SHERRY, based on what category the particular variety fit in to. Then we eliminated all but the entries of the RED and WHITE categories, changing the RED label to 0 and the WHITE label to 1. We used 20000 elements for training and 4000 for testing. One notable property of the data is that there was a greater proportion of red wines than there were white (about 2:1), this was carried over to the training and testing.
 
-## Dependencies
+We were trying to predict the score of a wine based on its price and type. Our hypothesis was that the higher priced red wines would have a better score.
 
-Note that this repository contains all dl4j examples for all modules. It will download about 1.5g of dependencies from maven central when you are first starting out. That being said, this makes it easier to get started without worrying about what to download. This examples repository is meant to be a reference point to get started with most common use cases.
-It is broken up in to modules. If you would like to just have a more minimal/simple, guide please go [here](http://www.dubs.tech/guides/maven-essentials/)
+We used linear classification for this task because we are looking for the price point within two different categories where the chance of a particular element being a certain quality becomes likely.
 
+We selected our training data by first organizing the large list of (data that had been pruned as described above) by the arbitrary numbering provided in the original data set. Then we took the first 20000 elements as training data and the next 4000 elements as testing data.
 
-Repository of Deeplearning4J neural net examples:
+2.
+First we used data from the San Francisco bike share program. Each entry in this set represented a bike rental and included the id of the station from where the bike was rented, the duration of the rental, and the id of the station to where the bike was returned. We initially tried to use the start location and the duration to predict if the return location was the same, but there was no discernible pattern for the algorithm to pick up on. Next we tried using the start and end locations to predict the length of the trip, but we ran into similar issues.
 
-- MLP Neural Nets
-- Convolutional Neural Nets
-- Recurrent Neural Nets
-- TSNE
-- Word2Vec & GloVe
-- Anomaly Detection
-- User interface examples.
+The data set we switched to was a set of wine reviews. Each entry represented a bottle of wine, and included the country of production, variety, price, and score given. We created several smaller data sets from this large set, each using score as a label. Except for wine_4, which also included the country of production, each data set only included the score class, price, and type class (0 for red, 1 for white). wine_1 through wine_4 had 2 score classes (0 for low, 1 for high). wine_1 contains a small amount of data which we used to test that we had working code. wine_2 increased the size of the data. wine_3 further increased the size of the data, bringing the training data to 20000 elements and the test data to 4000 elements. wine_4 is the same size as wine_3, but includes the country of production. We found it difficult to properly display this extra information on the chart printout. wine_5 added another score class, giving us 3 total (0 for low, 1 for mid, 2 for high). We found this to be the most useful partition. wine_6 added yet another score class giving us 4 total (0 for low, 1 for mid-low, 2 for mid-high, 3 for high).
 
-DL4J-Examples is released under an Apache 2.0 license. By contributing code to this repository, you agree to make your contribution available under an Apache 2.0 license.
+4.
+We have learned that, within our data, higher priced wines tend to get higher scores, while lower priced wines tend to get lower scores, though there were wines receiving both medium and high scores in all price ranges. There were no wines priced over $180 that received a score lower than 88. As well, there was only one white wine priced above $75 that scored below 88.
 
----
-
-## Build and Run
-
-Use [Maven](https://maven.apache.org/) to build the examples.
-
-```
-mvn clean package
-```
-
-This downloads binaries for all platforms, but we can also append `-Djavacpp.platform=` with `android-arm`, `android-x86`, `linux-ppc64le`, `linux-x86_64`, `macosx-x86_64`, or `windows-x86_64` to get binaries for only one platform and produce much smaller archives.
-
-Run the `runexamples.sh` script to run the examples (requires [bash](https://www.gnu.org/software/bash/)). It will list the examples and prompt you for the one to run. Pass the `--all` argument to run all of them. (Other options are shown with `-h`).
-
-```
-./runexamples.sh [-h | --help]
-```
-
-
-## Documentation
-For more information, check out [deeplearning4j.org](http://deeplearning4j.org/) and its [JavaDoc](http://deeplearning4j.org/doc/).
-
-`GradientsListenerExample.java` in dl4j-examples/src/main/java/org/deeplearning4j/examples/userInterface uses JavaFX. If you're using Java 8 or greater, it should run as is.  If you're using Java 7 or an earlier version, you should set JAVAFX_HOME to point to the root directory of the JavaFX 2.0 SDK.
-
-
-### Known issues with JavaFX
-
-If you are running on JDK 1.7 or inferior, the maven-enforcer plugin will require you to set the variable `JAVAFX_HOME` before building.
-That variable should point to a directory containing `jfxrt.jar`, a file that is part of the JavaFX 2.0 distrbution.
-
-Please set it to an instance of JavaFX that matches the JDK with which you are trying to use this project. Usually, the Sun JDK comes with JavaFX. However, OpenJDK does not and you may have to install OpenJFX, a free distribution of JavaFX.
-
-Beware that your editor (e.g. IntelliJ) may not be using the JDK that is your system default (and that you may ancounter on the command line).
-
-### On IntelliJ
-
-To run the JavaFX examples from IntelliJ, you'll have to add the `jfxrt.jar` as an exernal dependency of your project. Here's a screencast on how to do it: https://youtu.be/si146q7WkSY
-
-#### On Ubuntu
-
-If you are using OpenJDK, on Ubuntu 16, you can install OpenJFX with `sudo apt-get install libopenjfx-java`. A typical `JAVAFX_HOME` is then `/usr/share/java/openjfx/jre/lib/ext/`. If you are on Ubuntu 14, you can install OpenJFX with the following process:
-
-- edit `/etc/apt/sources.list.d/openjdk-r-ppa-trusty.list` and uncomment the line for deb-src
-- `sudo apt-get update`
-- `sudo apt-get install libicu-dev`
-- `sudo aptitude build-dep libopenjfx-java`
-- `sudo apt-get --compile source libopenjfx-java`
-- `ls -1 *.deb|xargs sudo dpkg -i`
-
-#### On JDK 1.8
-
-The Sun version of JDK8 still comes with its own JavaFX, so that there should be no need to configure anything particular there and the build will succeed. If using OpenJDK8, you will still have to install OpenJFX and set `JAVAFX_HOME`, but the maven-enforcer plugin will not catch you — the reason being that it's difficult to distinguish between OpenJDK and Sun's JDK since version 8, with both adoptiong the same Vendor ID.
-
-If you are using OpenJDK 8, install OpenJFX and set JAVAFX_HOME as indicated above. Compile with `mvn clean install -POpenJFX`
-
-## Other Issues
-
-If you notice issues, please log them, and if you want to contribute, submit a pull request. Input is welcome here.
-
+5.
+The project could be improved by considering more factors, including country of origin. One challenge that we would face in doing that is how to properly display that data. In the time that we looked, we could not find a way to easily display a 3-dimensional graph using DL4J.
