@@ -1,0 +1,39 @@
+--Score--
+
+0 <=90
+
+1 >90
+
+--Price--
+
+ #
+
+--Type--
+
+0 Red
+
+1 White
+
+--Country--
+
+0 US
+
+1 France
+
+2 Italy
+
+3 Argentina
+
+4 Chile
+
+5 Spain
+
+6 New Zealand
+
+7 Portugal
+
+8 Australia
+
+9 Germany
+
+
