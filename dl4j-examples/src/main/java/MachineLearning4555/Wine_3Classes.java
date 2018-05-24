@@ -4,6 +4,7 @@ import org.datavec.api.records.reader.RecordReader;
 import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
 import org.datavec.api.split.FileSplit;
 import org.datavec.api.util.ClassPathResource;
+import org.deeplearning4j.api.storage.StatsStorage;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
@@ -13,6 +14,8 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.ui.stats.StatsListener;
+import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
@@ -20,6 +23,7 @@ import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
+import org.deeplearning4j.ui.api.UIServer;
 
 import java.io.File;
 
@@ -41,7 +45,7 @@ public class Wine_3Classes {
         int numInputs = 2;
         //number of classes that can be output
         int numOutputs = 3;
-        int numHiddenNodes = 20;
+        int numHiddenNodes = 30;
 
         //Data sets
         final String filenameTrain  = new ClassPathResource("4555_Project/wine_5/winemag-data-SET_5-TRAIN.csv").getFile().getPath();
@@ -72,23 +76,37 @@ public class Wine_3Classes {
                 .nIn(numHiddenNodes).nOut(numHiddenNodes).build())
             .layer(2, new DenseLayer.Builder()
                 .weightInit(WeightInit.XAVIER)
-                .activation(Activation.ELU)
+                .activation(Activation.RELU)
                 .nIn(numHiddenNodes).nOut(numHiddenNodes).build())
-            .layer(3, new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
+            .layer(3, new DenseLayer.Builder()
+                .weightInit(WeightInit.XAVIER)
+                .activation(Activation.RELU)
+                .nIn(numHiddenNodes).nOut(numHiddenNodes).build())
+            .layer(4, new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
                 .weightInit(WeightInit.XAVIER)
                 .activation(Activation.SOFTMAX).weightInit(WeightInit.XAVIER)
                 .nIn(numHiddenNodes).nOut(numOutputs).build())
-                .pretrain(false).backprop(true).build();
+            .pretrain(false).backprop(true).build();
 
         MultiLayerNetwork model = new MultiLayerNetwork(conf);
         model.init();
+
+        //Initialize the user interface backend
+        UIServer uiServer = UIServer.getInstance();
+
+        //Configure where the network information (gradients, activations, score vs. time etc) is to be stored
+        StatsStorage statsStorage = new InMemoryStatsStorage();
+
         //Print score every 50 parameter updates
-        model.setListeners(new ScoreIterationListener(50));
+        //Add the StatsListener to collect this information from the network, as it trains
+        model.setListeners(new StatsListener(statsStorage), new ScoreIterationListener(50));
 
 
         for ( int n = 0; n < nEpochs; n++) {
             model.fit( trainIter );
         }
+
+        uiServer.attach(statsStorage);
 
         System.out.println("Evaluate model....");
         Evaluation eval = new Evaluation(numOutputs);
@@ -104,7 +122,6 @@ public class Wine_3Classes {
 
         //Print the evaluation statistics
         System.out.println(eval.stats());
-
 
         //------------------------------------------------------------------------------------
         //Training is complete. Code that follows is for plotting the data & predictions only
